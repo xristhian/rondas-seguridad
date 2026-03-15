@@ -1078,6 +1078,17 @@ function closeScanner() {
   document.getElementById('modal-scanner').classList.remove('active');
 }
 
+// Calcula distancia en metros entre dos coordenadas GPS (fórmula Haversine)
+function calcDistancia(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 function onQrSuccess(decodedText) {
   // Detener scanner
   if (state.qrScanner) {
@@ -1102,16 +1113,32 @@ function onQrSuccess(decodedText) {
     checkpointName: checkpoint.name,
     timestamp: new Date().toISOString(),
     lat: null,
-    lng: null
+    lng: null,
+    fueraDeRango: false,
+    distancia: null
   };
 
-  // Obtener GPS
+  // Obtener GPS y validar distancia
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
       scan.lat = pos.coords.latitude;
       scan.lng = pos.coords.longitude;
+
+      // Validar solo si el checkpoint tiene coordenadas definidas
+      if (checkpoint.lat && checkpoint.lng) {
+        const dist = calcDistancia(scan.lat, scan.lng, checkpoint.lat, checkpoint.lng);
+        scan.distancia = Math.round(dist);
+        if (dist > 5) {
+          scan.fueraDeRango = true;
+        }
+      }
+
       saveScanFull(scan);
-    }, () => saveScanFull(scan));
+    }, () => {
+      // Sin GPS — registrar igual pero marcado
+      scan.fueraDeRango = null; // null = no se pudo verificar
+      saveScanFull(scan);
+    }, { enableHighAccuracy: true, timeout: 8000 });
   } else {
     saveScanFull(scan);
   }
@@ -1121,7 +1148,15 @@ function saveScanFull(scan) {
   state.scans.push(scan);
   saveScans();
   updateDashboard();
-  showToast('✔ ' + scan.checkpointName + ' registrado');
+
+  if (scan.fueraDeRango === true) {
+    showToast(scan.checkpointName + ' registrado ⚠️ fuera de rango (' + scan.distancia + 'm)', false);
+  } else if (scan.fueraDeRango === null) {
+    showToast(scan.checkpointName + ' registrado (GPS no disponible)', false);
+  } else {
+    showToast('✔ ' + scan.checkpointName + ' registrado');
+  }
+
   sendToAppsScript(scan);
 
   // Actualizar mapa si está visible
