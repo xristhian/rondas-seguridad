@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0f1e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rondas">
+  <link rel="manifest" href="manifest.json">
+  <title>Rondas de Seguridad</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --bg2: #0e1528;
+      --panel: #111827;
+      --border: #1e2d45;
+      --accent: #00e5ff;
+      --accent2: #ff6b35;
+      --green: #00ff88;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --danger: #ff3b5c;
+      --card: #131c30;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── FONDO ANIMADO ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,229,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 30% at 80% 110%, rgba(255,107,53,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .grid-lines {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── PANTALLAS ── */
+    .screen {
+      display: none;
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+    .screen.active { display: block; }
+
+    /* ── HEADER ── */
+    .header {
+      background: rgba(10,15,30,0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .header-logo {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--bg);
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Barlow', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── LOGIN ── */
+    #screen-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .login-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(255,107,53,0.1));
+      border: 1px solid rgba(0,229,255,0.3);
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+    }
+
+    .login-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 20px;
+      color: var(--accent);
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: 'Barlow', sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent), #0097a7);
+      border: none;
+      border-radius: 10px;
+      color: var(--bg);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      font-family: 'Barlow', sans-serif;
+      transition: transform 0.15s, box-shadow 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,255,0.3); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .error-msg {
+      background: rgba(255,59,92,0.1);
+      border: 1px solid rgba(255,59,92,0.3);
+      color: var(--danger);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    /* ── DASHBOARD ── */
+    .dash-hero {
+      padding: 28px 20px 0;
+    }
+
+    .dash-greeting {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .dash-name {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .dash-shift {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: var(--green);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+    }
+
+    .dot-live {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ── STATS CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 20px 20px 0;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 28px;
+      color: var(--accent);
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── BOTÓN ESCANEAR ── */
+    .scan-cta {
+      margin: 24px 20px 0;
+    }
+
+    .btn-scan {
+      width: 100%;
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 14px;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Barlow', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-scan::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,229,255,0.05), transparent);
+    }
+
+    .btn-scan:active {
+      transform: scale(0.98);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(0,229,255,0.2);
+    }
+
+    .scan-icon { font-size: 28px; }
+
+    /* ── ÚLTIMOS ESCANEOS ── */
+    .section {
+      padding: 24px 20px 0;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .scan-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .scan-item-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .scan-item-info { flex: 1; }
+
+    .scan-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .scan-item-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .scan-item-time {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── SCANNER MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 200;
+      flex-direction: column;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      background: rgba(10,15,30,0.95);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: var(--accent);
+      letter-spacing: 2px;
+    }
+
+    .btn-close {
+      width: 36px; height: 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #qr-reader {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    #qr-reader > * { width: 100% !important; }
+
+    .scan-status {
+      padding: 20px;
+      background: rgba(10,15,30,0.95);
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── SUCCESS FEEDBACK ── */
+    .success-toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(0,255,136,0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 14px 24px;
+      border-radius: 40px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 300;
+      opacity: 0;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .success-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── HISTORIAL ── */
+    #screen-history .section { padding-top: 20px; }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 16px 20px 0;
+      overflow-x: auto;
+    }
+
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,229,255,0.08);
+    }
+
+    .history-date-group { margin-bottom: 20px; }
+
+    .history-date-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 20px;
+      margin-bottom: 10px;
+    }
+
+    /* ── MAPA ── */
+    #map-container {
+      height: calc(100vh - 120px);
+      width: 100%;
+    }
+
+    .map-legend {
+      position: absolute;
+      bottom: 90px;
+      left: 12px;
+      background: rgba(10,15,30,0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(10,15,30,0.97);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .nav-item {
+      flex: 1;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: color 0.2s;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border: none;
+      background: none;
+      font-family: 'Barlow', sans-serif;
+    }
+
+    .nav-item.active { color: var(--accent); }
+
+    .nav-icon { font-size: 22px; }
+
+    /* ── LOADING ── */
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid rgba(0,229,255,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PERFIL ── */
+    .profile-card {
+      margin: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .profile-avatar-lg {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--bg);
+    }
+
+    .profile-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .profile-role {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .profile-stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .profile-stat {
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .profile-stat-val {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 24px;
+      color: var(--accent);
+    }
+
+    .profile-stat-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div class="grid-lines"></div>
+
+<!-- ═══════════════════════════════ LOGIN ═══════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon">🛡️</div>
+      <div class="login-title">RONDAS</div>
+      <div class="login-sub">SISTEMA DE CONTROL DE SEGURIDAD</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Usuario</label>
+      <input type="text" id="inp-user" class="form-input" placeholder="Tu nombre de usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input type="password" id="inp-pass" class="form-input" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login">INGRESAR</button>
+    <div class="error-msg" id="login-error">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════ -->
+<div id="screen-dashboard" class="screen">
+  <div class="header">
+    <div class="header-logo">🛡️ RONDAS</div>
+    <div class="header-user">
+      <div class="avatar" id="hdr-avatar">G</div>
+      <button class="btn-logout" id="btn-logout">Salir</button>
+    </div>
+  </div>
+
+  <div class="dash-hero">
+    <div class="dash-greeting" id="dash-greeting">Buenas noches</div>
+    <div class="dash-name" id="dash-name">Guardia</div>
+    <div class="dash-shift">
+      <div class="dot-live"></div>
+      <span id="dash-shift-txt">Turno Noche · 21:00 – 08:00</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Escaneos hoy</div>
+      <div class="stat-value" id="stat-today">0</div>
+      <div class="stat-sub">en esta jornada</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Puntos pendientes</div>
+      <div class="stat-value" id="stat-pending" style="color:var(--accent2)">—</div>
+      <div class="stat-sub">sin registrar</div>
+    </div>
+  </div>
+
+  <div class="scan-cta">
+    <button class="btn-scan" id="btn-open-scanner">
+      <span class="scan-icon">⬛</span>
+      <span>ESCANEAR PUNTO DE CONTROL</span>
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Últimos registros</div>
+    <div id="recent-scans">
+      <div class="empty-state">
+        <div class="empty-icon">📍</div>
+        Aún no hay escaneos en esta jornada
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ HISTORIAL ═══════════════════════════ -->
+<div id="screen-history" class="screen">
+  <div class="header">
+    <div class="header-logo">📋 HISTORIAL</div>
+  </div>
+  <div class="filter-row" id="filter-row"></div>
+  <div class="section">
+    <div id="history-list">
+      <div class="empty-state">
+        <div class="empty-icon">🗂️</div>
+        No hay registros guardados localmente
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ MAPA ═══════════════════════════════ -->
+<div id="screen-map" class="screen" style="padding:0;">
+  <div class="header">
+    <div class="header-logo">🗺️ MAPA DE RONDA</div>
+  </div>
+  <div style="position:relative;">
+    <div id="map-container"></div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#00e5ff;box-shadow:0 0 6px #00e5ff"></div> Escaneado</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></div> Sin escanear</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00ff88;box-shadow:0 0 6px #00ff88"></div> Posición actual</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PERFIL ══════════════════════════════ -->
+<div id="screen-profile" class="screen">
+  <div class="header">
+    <div class="header-logo">👤 MI PERFIL</div>
+  </div>
+  <div class="profile-card">
+    <div class="profile-avatar-lg" id="prof-avatar">G</div>
+    <div class="profile-name" id="prof-name">Guardia</div>
+    <div class="profile-role">Guardia de Seguridad · Turno Noche</div>
+    <div class="profile-stat-row">
+      <div class="profile-stat">
+        <div class="profile-stat-val" id="prof-total">0</div>
+        <div class="profile-stat-lbl">Total escaneos</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-val" id="prof-jornadas">0</div>
+        <div class="profile-stat-lbl">Jornadas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ BOTTOM NAV ═══════════════════════════ -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <button class="nav-item active" data-screen="dashboard">
+    <span class="nav-icon">🏠</span>Inicio
+  </button>
+  <button class="nav-item" data-screen="history">
+    <span class="nav-icon">📋</span>Historial
+  </button>
+  <button class="nav-item" data-screen="map">
+    <span class="nav-icon">🗺️</span>Mapa
+  </button>
+  <button class="nav-item" data-screen="profile">
+    <span class="nav-icon">👤</span>Perfil
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════ SCANNER MODAL ═══════════════════════ -->
+<div class="modal-overlay" id="modal-scanner">
+  <div class="modal-header">
+    <div class="modal-title">ESCANEANDO QR</div>
+    <button class="btn-close" id="btn-close-scanner">✕</button>
+  </div>
+  <div id="qr-reader"></div>
+  <div class="scan-status" id="scan-status">Apunta la cámara al código QR del punto de control</div>
+</div>
+
+<!-- ═══════════════════════════════ TOAST ════════════════════════════════ -->
+<div class="success-toast" id="toast"></div>
+
+<!-- Google Maps (carga diferida) -->
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIGURACIÓN — editar aquí
+// ═══════════════════════════════════════════════════
+const CONFIG = {
+  // URL del Google Apps Script (debes reemplazar con tu URL desplegada)
+  APPS_SCRIPT_URL: 'APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxoxVGXbjYTY5Wq5mBhiAHMhcIQ4kUdPYpEAm-J8WxihwRQw9AMHbZDzw14WITXpwpH/exec',
+
+  // Clave de Google Maps JavaScript API
+  MAPS_API_KEY: 'AIzaSyCB5GVz9h5sEi0djYNfSXIrkmyqr3xaN-8',
+
+  // Usuarios (usuario: { password, name })
+  // En producción esto viene del Apps Script
+  USERS: {
+    'guardia1': { password: ‘ser123, name: ‘Sergio Cardenas’ },
+    'guardia2': { password: ‘jon456, name: ‘Jonathan Infante' }
+  },
+
+  // Puntos de control (se sincronizan desde Sheets)
+  // Ejemplo inicial
+  CHECKPOINTS: [
+    { id: 'CP01', name: 'Entrada Principal',      lat: -37.488302, lng: -72.417672 },
+    { id: 'CP02', name: 'Estacionamiento Norte',  lat: -37.488750, lng: -72.417794 },
+    { id: 'CP03', name: 'Bodega Central',         lat: -37.4685, lng: -72.3528 },
+    { id: 'CP04', name: 'Sector B – Oficinas',    lat: -37.4690, lng: -72.3545 },
+    { id: 'CP05', name: 'Garita Sur',             lat: -37.4695, lng: -72.3538 }
+  ]
+};
+
+// ═══════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ═══════════════════════════════════════════════════
+let state = {
+  user: null,
+  scans: JSON.parse(localStorage.getItem('rondas_scans') || '[]'),
+  map: null,
+  markers: {},
+  routeLine: null,
+  qrScanner: null,
+  currentScreen: 'login'
+};
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+function saveScans() {
+  localStorage.setItem('rondas_scans', JSON.stringify(state.scans));
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function getJornada() {
+  // Jornada = noche anterior si hora < 08:00
+  const now = new Date();
+  const h = now.getHours();
+  const date = new Date(now);
+  if (h < 8) date.setDate(date.getDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function getTodayScans() {
+  const jornada = getJornada();
+  return state.scans.filter(s => {
+    const d = new Date(s.timestamp);
+    const h = d.getHours();
+    const date = new Date(d);
+    if (h < 8) date.setDate(date.getDate() - 1);
+    return date.toISOString().slice(0, 10) === jornada && s.user === state.user?.username;
+  });
+}
+
+function showToast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.textContent = (ok ? '✅ ' : '⚠️ ') + msg;
+  t.style.background = ok ? 'rgba(0,255,136,0.15)' : 'rgba(255,107,53,0.15)';
+  t.style.borderColor = ok ? '#00ff88' : '#ff6b35';
+  t.style.color = ok ? '#00ff88' : '#ff6b35';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 6 && h < 12) return 'Buenos días';
+  if (h >= 12 && h < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
+// ═══════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const username = document.getElementById('inp-user').value.trim().toLowerCase();
+  const password = document.getElementById('inp-pass').value;
+  const errEl = document.getElementById('login-error');
+
+  errEl.style.display = 'none';
+
+  // Verificar localmente primero (luego se puede validar vs Sheets)
+  const user = CONFIG.USERS[username];
+  if (!user || user.password !== password) {
+    errEl.style.display = 'block';
+    return;
+  }
+
+  state.user = { username, name: user.name };
+  loginSuccess();
+});
+
+document.getElementById('inp-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-login').click();
+});
+
+function loginSuccess() {
+  const u = state.user;
+  document.getElementById('hdr-avatar').textContent = u.name.charAt(0).toUpperCase();
+  document.getElementById('dash-greeting').textContent = getGreeting();
+  document.getElementById('dash-name').textContent = u.name;
+  document.getElementById('prof-avatar').textContent = u.name.charAt(0).toUpperCase();
+  document.getElementById('prof-name').textContent = u.name;
+
+  document.getElementById('bottom-nav').style.display = 'flex';
+  showScreen('dashboard');
+  updateDashboard();
+}
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  state.user = null;
+  document.getElementById('bottom-nav').style.display = 'none';
+  document.getElementById('inp-pass').value = '';
+  showScreen('login');
+});
+
+// ═══════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ═══════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.screen === name);
+  });
+  state.currentScreen = name;
+
+  if (name === 'map') initMap();
+  if (name === 'history') renderHistory();
+  if (name === 'profile') renderProfile();
+  if (name === 'dashboard') updateDashboard();
+}
+
+document.querySelectorAll('.nav-item').forEach(b => {
+  b.addEventListener('click', () => showScreen(b.dataset.screen));
+});
+
+// ═══════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════
+function updateDashboard() {
+  const todayScans = getTodayScans();
+  document.getElementById('stat-today').textContent = todayScans.length;
+
+  // Puntos pendientes
+  const scannedIds = new Set(todayScans.map(s => s.checkpointId));
+  const pending = CONFIG.CHECKPOINTS.filter(cp => !scannedIds.has(cp.id)).length;
+  document.getElementById('stat-pending').textContent = pending;
+
+  renderRecentScans(todayScans.slice().reverse().slice(0, 5));
+}
+
+function renderRecentScans(scans) {
+  const el = document.getElementById('recent-scans');
+  if (scans.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📍</div>Aún no hay escaneos en esta jornada</div>';
+    return;
+  }
+  el.innerHTML = scans.map(s => `
+    <div class="scan-item">
+      <div class="scan-item-dot"></div>
+      <div class="scan-item-info">
+        <div class="scan-item-name">${s.checkpointName}</div>
+        <div class="scan-item-meta">${s.checkpointId}</div>
+      </div>
+      <div class="scan-item-time">${formatTime(s.timestamp)}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  SCANNER QR
+// ═══════════════════════════════════════════════════
+document.getElementById('btn-open-scanner').addEventListener('click', openScanner);
+document.getElementById('btn-close-scanner').addEventListener('click', closeScanner);
+
+function openScanner() {
+  document.getElementById('modal-scanner').classList.add('active');
+  document.getElementById('scan-status').textContent = 'Apunta la cámara al código QR del punto de control';
+
+  state.qrScanner = new Html5Qrcode('qr-reader');
+  state.qrScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onQrSuccess,
+    () => {}
+  ).catch(err => {
+    document.getElementById('scan-status').textContent = '⚠️ No se pudo acceder a la cámara: ' + err;
+  });
+}
+
+function closeScanner() {
+  if (state.qrScanner) {
+    state.qrScanner.stop().catch(() => {});
+    state.qrScanner = null;
+  }
+  document.getElementById('modal-scanner').classList.remove('active');
+}
+
+function onQrSuccess(decodedText) {
+  // Detener scanner
+  if (state.qrScanner) {
+    state.qrScanner.stop().catch(() => {});
+    state.qrScanner = null;
+  }
+  document.getElementById('modal-scanner').classList.remove('active');
+
+  // Buscar checkpoint
+  const checkpoint = CONFIG.CHECKPOINTS.find(cp => cp.id === decodedText);
+  if (!checkpoint) {
+    showToast('QR no reconocido: ' + decodedText, false);
+    return;
+  }
+
+  // Registrar escaneo
+  const scan = {
+    id: Date.now().toString(),
+    user: state.user.username,
+    userName: state.user.name,
+    checkpointId: checkpoint.id,
+    checkpointName: checkpoint.name,
+    timestamp: new Date().toISOString(),
+    lat: null,
+    lng: null
+  };
+
+  // Obtener GPS
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      scan.lat = pos.coords.latitude;
+      scan.lng = pos.coords.longitude;
+      saveScanFull(scan);
+    }, () => saveScanFull(scan));
+  } else {
+    saveScanFull(scan);
+  }
+}
+
+function saveScanFull(scan) {
+  state.scans.push(scan);
+  saveScans();
+  updateDashboard();
+  showToast('✔ ' + scan.checkpointName + ' registrado');
+  sendToAppsScript(scan);
+
+  // Actualizar mapa si está visible
+  if (state.currentScreen === 'map') updateMapMarkers();
+}
+
+// ═══════════════════════════════════════════════════
+//  ENVÍO A GOOGLE APPS SCRIPT
+// ═══════════════════════════════════════════════════
+async function sendToAppsScript(scan) {
+  if (!CONFIG.APPS_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL.includes('TU_SCRIPT')) return;
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'scan', ...scan })
+    });
+  } catch (e) {
+    console.warn('Apps Script offline, guardado local OK');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  HISTORIAL
+// ═══════════════════════════════════════════════════
+function renderHistory() {
+  const scans = [...state.scans].reverse();
+  const el = document.getElementById('history-list');
+
+  if (scans.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🗂️</div>No hay registros aún</div>';
+    return;
+  }
+
+  // Agrupar por fecha
+  const groups = {};
+  scans.forEach(s => {
+    const date = formatDate(s.timestamp);
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(s);
+  });
+
+  el.innerHTML = Object.entries(groups).map(([date, items]) => `
+    <div class="history-date-group">
+      <div class="history-date-label">${date}</div>
+      ${items.map(s => `
+        <div class="scan-item" style="margin:0 20px 8px;">
+          <div class="scan-item-dot"></div>
+          <div class="scan-item-info">
+            <div class="scan-item-name">${s.checkpointName}</div>
+            <div class="scan-item-meta">${s.userName} · ${s.checkpointId}</div>
+          </div>
+          <div class="scan-item-time">${formatTime(s.timestamp)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  MAPA
+// ═══════════════════════════════════════════════════
+let mapLoaded = false;
+
+function initMap() {
+  if (!mapLoaded) {
+    loadGoogleMaps();
+    mapLoaded = true;
+  } else {
+    updateMapMarkers();
+  }
+}
+
+function loadGoogleMaps() {
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS_API_KEY}&callback=onMapReady`;
+  script.async = true;
+  document.head.appendChild(script);
+}
+
+window.onMapReady = function() {
+  const center = CONFIG.CHECKPOINTS.length > 0
+    ? { lat: CONFIG.CHECKPOINTS[0].lat, lng: CONFIG.CHECKPOINTS[0].lng }
+    : { lat: -37.468, lng: -72.354 };
+
+  state.map = new google.maps.Map(document.getElementById('map-container'), {
+    center,
+    zoom: 17,
+    mapTypeId: 'satellite',
+    styles: [],
+    disableDefaultUI: true,
+    zoomControl: true
+  });
+
+  updateMapMarkers();
+
+  // Posición actual
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(pos => {
+      if (!state.myMarker) {
+        state.myMarker = new google.maps.Marker({
+          position: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          map: state.map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#00ff88',
+            fillOpacity: 1,
+            strokeColor: '#fff',
+            strokeWeight: 2
+          },
+          title: 'Mi posición'
+        });
+      } else {
+        state.myMarker.setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      }
+    });
+  }
+};
+
+function updateMapMarkers() {
+  if (!state.map) return;
+
+  const todayScans = getTodayScans();
+  const scannedIds = new Set(todayScans.map(s => s.checkpointId));
+
+  // Limpiar marcadores anteriores
+  Object.values(state.markers).forEach(m => m.setMap(null));
+  state.markers = {};
+
+  CONFIG.CHECKPOINTS.forEach(cp => {
+    const done = scannedIds.has(cp.id);
+    const marker = new google.maps.Marker({
+      position: { lat: cp.lat, lng: cp.lng },
+      map: state.map,
+      label: { text: cp.id, color: '#0a0f1e', fontSize: '10px', fontWeight: '700' },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 14,
+        fillColor: done ? '#00e5ff' : '#ff6b35',
+        fillOpacity: 0.9,
+        strokeColor: '#fff',
+        strokeWeight: 2
+      },
+      title: cp.name + (done ? ' ✓' : ' (pendiente)')
+    });
+
+    const info = new google.maps.InfoWindow({
+      content: `<div style="font-family:sans-serif;font-size:13px;color:#333;">
+        <b>${cp.name}</b><br>${cp.id}<br>
+        ${done ? '✅ Escaneado' : '⏳ Pendiente'}
+      </div>`
+    });
+    marker.addListener('click', () => info.open(state.map, marker));
+    state.markers[cp.id] = marker;
+  });
+
+  // Línea de recorrido
+  if (state.routeLine) state.routeLine.setMap(null);
+  const routePoints = todayScans
+    .filter(s => s.lat && s.lng)
+    .map(s => ({ lat: s.lat, lng: s.lng }));
+
+  if (routePoints.length > 1) {
+    state.routeLine = new google.maps.Polyline({
+      path: routePoints,
+      geodesic: true,
+      strokeColor: '#00e5ff',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      map: state.map
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  PERFIL
+// ═══════════════════════════════════════════════════
+function renderProfile() {
+  if (!state.user) return;
+  const myScans = state.scans.filter(s => s.user === state.user.username);
+  const jornadas = new Set(myScans.map(s => getJornadaFromScan(s))).size;
+  document.getElementById('prof-total').textContent = myScans.length;
+  document.getElementById('prof-jornadas').textContent = jornadas;
+}
+
+function getJornadaFromScan(s) {
+  const d = new Date(s.timestamp);
+  if (d.getHours() < 8) {
+    const y = new Date(d);
+    y.setDate(y.getDate() - 1);
+    return y.toISOString().slice(0, 10);
+  }
+  return d.toISOString().slice(0, 10);
+}
+</script>
+</body>
+</html>
