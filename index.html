@@ -863,25 +863,23 @@
 const CONFIG = {
   // URL del Google Apps Script (debes reemplazar con tu URL desplegada)
   APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxoxVGXbjYTY5Wq5mBhiAHMhcIQ4kUdPYpEAm-J8WxihwRQw9AMHbZDzw14WITXpwpH/exec',
-  
+
   // Clave de Google Maps JavaScript API
   MAPS_API_KEY: 'AIzaSyCB5GVz9h5sEi0djYNfSXIrkmyqr3xaN-8',
 
   // Usuarios (usuario: { password, name })
-  // En producción esto viene del Apps Script
   USERS: {
-    'guardia1': { password: ‘ser123’ , name: ‘Sergio Cardenas’ },
-    'guardia2': { password: ‘jon456’ , name: ‘Jonathan Infante' }
+    'guardia1': { password: 'ser123', name: 'Sergio Cardenas' },
+    'guardia2': { password: 'jon456', name: 'Jonathan Infante' }
   },
 
-  // Puntos de control (se sincronizan desde Sheets)
-  // Ejemplo inicial
+  // Puntos de control
   CHECKPOINTS: [
-    { id: 'CP01', name: 'Entrada Principal',      lat: -37.488302, lng: -72.417672 },
-    { id: 'CP02', name: 'Estacionamiento Norte',  lat: -37.488750, lng: -72.417794 },
-    { id: 'CP03', name: 'Bodega Central',         lat: -37.4685, lng: -72.3528 },
-    { id: 'CP04', name: 'Sector B – Oficinas',    lat: -37.4690, lng: -72.3545 },
-    { id: 'CP05', name: 'Garita Sur',             lat: -37.4695, lng: -72.3538 }
+    { id: 'CP01', name: 'Entrada Principal',     lat: -37.488302, lng: -72.417672 },
+    { id: 'CP02', name: 'Estacionamiento Norte', lat: -37.488750, lng: -72.417794 },
+    { id: 'CP03', name: 'Bodega Central',        lat: -37.4685,   lng: -72.3528   },
+    { id: 'CP04', name: 'Sector B - Oficinas',   lat: -37.4690,   lng: -72.3545   },
+    { id: 'CP05', name: 'Garita Sur',            lat: -37.4695,   lng: -72.3538   }
   ]
 };
 
